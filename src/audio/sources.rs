@@ -4,6 +4,7 @@ use rand_distr::Normal;
 use rodio::Source;
 use crate::audio::{AdjustableSource, SAMPLE_RATE};
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 /// A square wave source, with adjustable frequency. Toggles from 1 to -1.
 pub struct SquareWave {
     phase: f32,
@@ -58,6 +59,7 @@ impl AdjustableSource for SquareWave {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 /// A sawtooth wave source, with adjustable frequency. Linearly increases, then drops down instantly.
 pub struct SawtoothWave {
     phase: f32,
@@ -106,6 +108,7 @@ impl AdjustableSource for SawtoothWave {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 /// A triangle wave source, with adjustable frequency. Linearly increases, then linearly decreases.
 pub struct TriangleWave {
     phase: f32,
@@ -156,6 +159,7 @@ impl AdjustableSource for TriangleWave {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 /// A sine wave source, with adjustable frequency. Generates a sine wave with the given frequency.
 pub struct SineWave {
     phase: f32,
@@ -202,6 +206,7 @@ impl AdjustableSource for SineWave {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 /// A noise source, with adjustable frequency. Generates a random number between -1 and 1 with a normal distribution.
 pub struct WhiteNoise;
 

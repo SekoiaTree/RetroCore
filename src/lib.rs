@@ -1,3 +1,5 @@
+extern crate core;
+
 pub mod audio;
 
 use std::ops::{Deref, DerefMut};
@@ -60,8 +62,6 @@ impl RetroCanvas {
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
-    use sdl2::pixels::Color;
-    use sdl2::rect::Rect;
 
     #[test]
     fn scaling() {
