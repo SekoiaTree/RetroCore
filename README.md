@@ -5,7 +5,7 @@ A library for easily creating windows and audio sources for fantasy consoles
 ## Canvas
 Create a new canvas with
 ```rs
-RetroCanvas::new((1000, 600), (320, 240), "Test");```
+RetroCanvas::new((1000, 600), (320, 240), "Test");
 ```
 The parameters are, in order, the real window size, the simulated window size (i.e. the size of the console's window), and the title.
 
