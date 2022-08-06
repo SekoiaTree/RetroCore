@@ -4,12 +4,14 @@ use rand_distr::Normal;
 use rodio::Source;
 use crate::audio::{AdjustableSource, SAMPLE_RATE};
 
+/// A square wave source, with adjustable frequency. Toggles from 1 to -1.
 pub struct SquareWave {
     phase: f32,
     frequency: f32,
 }
 
 impl SquareWave {
+    /// Create a new square wave source with the given frequency.
     pub fn new(frequency: f32) -> SquareWave {
         SquareWave {
             phase: 0.0,
@@ -56,12 +58,14 @@ impl AdjustableSource for SquareWave {
     }
 }
 
+/// A sawtooth wave source, with adjustable frequency. Linearly increases, then drops down instantly.
 pub struct SawtoothWave {
     phase: f32,
     frequency: f32,
 }
 
 impl SawtoothWave {
+    /// Create a new sawtooth wave source with the given frequency.
     pub fn new(frequency: f32) -> SawtoothWave {
         SawtoothWave {
             phase: 0.0,
@@ -102,12 +106,14 @@ impl AdjustableSource for SawtoothWave {
     }
 }
 
+/// A triangle wave source, with adjustable frequency. Linearly increases, then linearly decreases.
 pub struct TriangleWave {
     phase: f32,
     frequency: f32,
 }
 
 impl TriangleWave {
+    /// Create a new triangle wave source with the given frequency.
     pub fn new(frequency: f32) -> TriangleWave {
         TriangleWave {
             phase: 0.0,
@@ -150,12 +156,14 @@ impl AdjustableSource for TriangleWave {
     }
 }
 
+/// A sine wave source, with adjustable frequency. Generates a sine wave with the given frequency.
 pub struct SineWave {
     phase: f32,
     frequency: f32,
 }
 
 impl SineWave {
+    /// Create a new sine wave source with the given frequency.
     pub fn new(frequency: f32) -> SineWave {
         SineWave {
             phase: 0.0,
@@ -194,9 +202,11 @@ impl AdjustableSource for SineWave {
     }
 }
 
+/// A noise source, with adjustable frequency. Generates a random number between -1 and 1 with a normal distribution.
 pub struct WhiteNoise;
 
 impl WhiteNoise {
+    /// Create a new noise source.
     pub fn new() -> WhiteNoise {
         WhiteNoise
     }

@@ -6,6 +6,7 @@ use std::time::Duration;
 use rodio::{OutputStream, OutputStreamHandle, Sample, Sink};
 use rodio::source::Source;
 
+/// A source who's frequency can be adjusted.
 pub trait AdjustableSource : Source where
     Self::Item: Sample, {
     fn set_frequency(&mut self, frequency: f32);
@@ -13,12 +14,14 @@ pub trait AdjustableSource : Source where
 
 const SAMPLE_RATE: u32 = 41000;
 
+/// A Source which contains other adjustable sources and plays all of them at once (with adjustable volumes and frequencies).
 pub struct Channels<const CHANNEL_COUNT : usize> {
     sources : [Arc<Mutex<Box<dyn AdjustableSource<Item = f32> + Send>>>; CHANNEL_COUNT],
     volume : [Arc<Mutex<f32>>; CHANNEL_COUNT],
 }
 
 impl<const CHANNEL_COUNT : usize> Channels<CHANNEL_COUNT> {
+    /// Create a new Channels with the given sources. Also returns the hook, which is needed to adjust frequencies after creation.
     pub fn new(sources: [Box<dyn AdjustableSource<Item = f32> + Send>; CHANNEL_COUNT]) -> (Self, ChannelHook<CHANNEL_COUNT>) {
         let volumes = [(); CHANNEL_COUNT].map(|()| Arc::new(Mutex::new(0.2)));
         let sources = sources.map(|x| Arc::new(Mutex::new(x)));
@@ -62,36 +65,43 @@ impl<const CHANNEL_COUNT : usize> Source for Channels<CHANNEL_COUNT> {
     }
 }
 
+/// A hook which allows adjusting the volumes and frequencies of the channels after creation.
 pub struct ChannelHook<const CHANNEL_COUNT : usize> {
     volume : [Arc<Mutex<f32>>; CHANNEL_COUNT],
     sources : [Arc<Mutex<Box<dyn AdjustableSource<Item = f32> + Send>>>; CHANNEL_COUNT],
 }
 
 impl<const CHANNEL_COUNT : usize> ChannelHook<CHANNEL_COUNT> {
+    /// Set the frequency of the channel with the given index.
     pub fn set_frequency(&mut self, index : usize, frequency: f32) {
         self.sources[index].lock().unwrap().set_frequency(frequency);
     }
 
+    /// Set the volume of the channel with the given index.
     pub fn set_volume(&mut self, index : usize, volume: f32) {
         *self.volume[index].lock().unwrap() = volume;
     }
 }
 
+/// A playback which controls the playing of a Channels. Derefs down to a Sink.
+/// DO NOT DROP THIS OR THE CHANNEL WILL STOP PLAYING.
 pub struct ChannelPlayback {
     sink : Sink,
-    stream : OutputStream,
-    handle : OutputStreamHandle
+    _stream : OutputStream,
+    _handle : OutputStreamHandle
 }
 
 impl ChannelPlayback {
+    /// Create a new ChannelPlayback with the given Channels, and starts playing it.
     pub fn new<const CHANNEL_COUNT : usize>(channels : Channels<CHANNEL_COUNT>) -> Self {
         let (stream, handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&handle).ok().unwrap();
         sink.append(channels);
+        sink.play();
         ChannelPlayback {
             sink,
-            stream,
-            handle
+            _stream: stream,
+            _handle: handle
         }
     }
 }
