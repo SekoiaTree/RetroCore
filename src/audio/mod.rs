@@ -20,16 +20,20 @@ pub struct Channels {
     volume : Vec<Arc<Mutex<f32>>>,
 }
 
+/// A builder for Channels
 pub struct ChannelsBuilder {
     sources : Vec<Arc<Mutex<dyn AdjustableSource<Item = f32> + Send>>>,
 }
 
 impl ChannelsBuilder {
+    /// Create a new ChannelsBuilder
     pub fn new() -> Self {
         Self {
             sources : Vec::new(),
         }
     }
+
+    /// Add a source.
     pub fn add_source<T>(mut self, source: T) -> Self
         where
             T: AdjustableSource<Item = f32> + Send + 'static,
@@ -38,14 +42,18 @@ impl ChannelsBuilder {
         self
     }
 
-    pub fn add_source_raw<T>(mut self, source: Arc<Mutex<T>>) -> Self
+    /// Add a source that is already an Arc<Mutex<T>>. This method will clone it, which means you can keep your source and modify it during runtime
+    /// This is useful if you wish to add more capabilities to your sources, such as a start signal.
+    pub fn add_source_raw<T>(mut self, source: &mut Arc<Mutex<T>>) -> Self
         where
             T: AdjustableSource<Item = f32> + Send + 'static,
     {
-        self.sources.push(source);
+        self.sources.push(source.clone());
         self
     }
 
+    /// Creates the Channels. Consumes this builder and returns a Channels, as well as a ChannelHook that allows you to control the channels.
+    /// Panics if any of the sources have a limited duration or frame length, or if there are more than one channel.
     pub fn build(self) -> (Channels, ChannelHook) {
         Channels::new(self.sources)
     }
@@ -57,7 +65,7 @@ impl Channels {
         for i in &sources {
             let j = i.lock().unwrap();
             if j.total_duration().is_some() || j.current_frame_len().is_some() {
-                panic!("Sources can't have a limited duration, and cannot have a finite frame len due to library limitations! Please contact the author with your use case if you cannot work around it.");
+                panic!("Sources can't have a limited duration, and cannot have a finite frame length due to library limitations! Please contact the author with your use case if you cannot work around it.");
             }
             if j.channels() != 1 {
                 panic!("Sources can't have more than one channel! Please contact the author with your use case if you cannot work around it.");

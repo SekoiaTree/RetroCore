@@ -13,7 +13,8 @@ A RetroCanvas derefs to a `Canvas<Window>` from SDL2, which means you can use al
 The only exception is clearing the screen; clearing the screen also clears the backdrop of the window, which means if you clear with a color different from the background (black, by default), you will overwrite that. Instead, use `clear_simulated`
 
 ## Audio
-Audio is created by creating a `Channels` struct, which contains a list of different channels. Each channel is an audio source of its own, with adjustable frequency. When you create a Channels struct, you also receive the hook. The hook permits you to control the frequencies and volumes of all the different channels.
+Audio is created by creating a `Channels` struct, which contains a list of different channels. Each channel is an audio source of its own, with adjustable frequency. When you create a Channels struct (using the builder), you also receive the hook. The hook permits you to control the frequencies and volumes of all the different channels.
+Additionally, if you wish to add extra control to a source (e.g. a start signal for a drum beat), you can use `add_source_raw`. This allows you to keep a reference (specifically, an `Arc<Mutex<T>>`) which you can handle yourself.
 
 The following adjustable sources are provided, but you can create more by implementing `AdjustableSource`:
 - Square wave
@@ -26,17 +27,20 @@ The audio can then be more easily played than with rodio, using `ChannelPlayback
 
 Example code:
 ```rs
-        let (channels, mut hook) = Channels::new([
-            Box::new(sources::SquareWave::new(220.0)),
-            Box::new(sources::SineWave::new(220.0)),
-        ]);
+        
+        let (channels, mut hook) = ChannelsBuilder::new()
+            .add_source(sources::SineWave::new(220.0))
+            .add_source(sources::SquareWave::new(220.0))
+            .build();
         let _channel_playback = ChannelPlayback::new(channels);
-        std::thread::sleep(Duration::from_secs(2));
-        hook.set_frequency(0, 440.0);
+        hook.set_volume(0, 0.5);
+        hook.set_volume(1, 0.1);
         std::thread::sleep(Duration::from_secs(2));
         hook.set_frequency(1, 440.0);
         std::thread::sleep(Duration::from_secs(2));
-        hook.set_volume(0, 0.0);
+        hook.set_frequency(0, 440.0);
+        std::thread::sleep(Duration::from_secs(2));
+        hook.set_volume(1, 0.0);
         std::thread::sleep(Duration::from_secs(2));
 ```
 
