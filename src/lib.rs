@@ -1,6 +1,7 @@
 extern crate core;
 
 pub mod audio;
+pub mod tokenizing;
 
 use std::ops::{Deref, DerefMut};
 use sdl2::pixels::Color;
