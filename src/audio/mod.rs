@@ -61,7 +61,7 @@ impl ChannelsBuilder {
 
 impl Channels {
     fn new(sources: Vec<Arc<Mutex<dyn AdjustableSource<Item = f32> + Send>>>) -> (Self, ChannelHook) {
-        let volumes : Vec<Arc<Mutex<f32>>> = (0..sources.len()).map(|_| Arc::new(Mutex::new(0.2))).collect();
+        let volumes : Vec<Arc<Mutex<f32>>> = (0..sources.len()).map(|_| Arc::new(Mutex::new(0.))).collect();
         for i in &sources {
             let j = i.lock().unwrap();
             if j.total_duration().is_some() || j.current_frame_len().is_some() {

@@ -1,7 +1,8 @@
 use std::time::Duration;
 use rand::distributions::Distribution;
+use rand::thread_rng;
 use rand_distr::Normal;
-use rodio::Source;
+use rodio::{Sample, Source};
 use crate::audio::{AdjustableSource, SAMPLE_RATE};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -207,7 +208,7 @@ impl AdjustableSource for SineWave {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-/// A noise source, with adjustable frequency. Generates a random number between -1 and 1 with a normal distribution.
+/// A noise source. Generates a random number between -1 and 1 with a normal distribution.
 pub struct WhiteNoise;
 
 impl WhiteNoise {
@@ -215,6 +216,10 @@ impl WhiteNoise {
     pub fn new() -> WhiteNoise {
         WhiteNoise
     }
+}
+
+impl AdjustableSource for WhiteNoise {
+    fn set_frequency(&mut self, _frequency: f32) {}
 }
 
 impl Source for WhiteNoise {
@@ -235,11 +240,171 @@ impl Source for WhiteNoise {
 impl Iterator for WhiteNoise {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
-        let result = Normal::new(0.0, 1.0).unwrap().sample(&mut rand::thread_rng());
+        let result = Normal::new(0.0, 1.0).unwrap().sample(&mut thread_rng());
         Some(result)
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+/// A semi-triangle source, with adjustable frequency. Linearly goes from -1 to 1, then down to 0, back to 1, then down to -1.
+pub struct SemiTriangle {
+    phase: f32,
+    frequency: f32,
+}
+
+impl SemiTriangle {
+    /// Create a new semi-triangle wave source with the given frequency.
+    pub fn new(frequency: f32) -> SemiTriangle {
+        SemiTriangle {
+            phase: 0.0,
+            frequency,
+        }
+    }
+}
+
+impl Source for SemiTriangle {
+    fn current_frame_len(&self) -> Option<usize> {
+        None
+    }
+    fn channels(&self) -> u16 {
+        1
+    }
+    fn sample_rate(&self) -> u32 {
+        SAMPLE_RATE
+    }
+    fn total_duration(&self) -> Option<Duration> {
+        None
+    }
+}
+
+
+impl Iterator for SemiTriangle {
+    type Item = f32;
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = if self.phase <= 0.25 {
+            self.phase*8.0-1.0
+        } else if self.phase <= 0.5 {
+            1.0-(self.phase-0.25)*4.0
+        } else if self.phase <= 0.75 {
+            (self.phase-0.5)*4.0
+        } else {
+            1.0-((self.phase-0.75)*8.0)
+        };
+        self.phase = (self.phase + self.frequency / SAMPLE_RATE as f32) % 1.0;
+        Some(result)
+    }
+}
+
+impl AdjustableSource for SemiTriangle {
+    fn set_frequency(&mut self, frequency: f32) {
+        self.frequency = frequency;
+    }
+}
+
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+/// A semi-sine source, with adjustable frequency. Goes up from -1 to 1, then back down, but only with the positive half of a sine wave mapped to it.
+pub struct SemiSine {
+    phase: f32,
+    frequency: f32,
+}
+
+impl SemiSine {
+    /// Create a new semi-sine wave source with the given frequency.
+    pub fn new(frequency: f32) -> SemiSine {
+        SemiSine {
+            phase: 0.0,
+            frequency,
+        }
+    }
+}
+
+impl Source for SemiSine {
+    fn current_frame_len(&self) -> Option<usize> {
+        None
+    }
+    fn channels(&self) -> u16 {
+        1
+    }
+    fn sample_rate(&self) -> u32 {
+        SAMPLE_RATE
+    }
+    fn total_duration(&self) -> Option<Duration> {
+        None
+    }
+}
+
+
+impl Iterator for SemiSine {
+    type Item = f32;
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = (self.phase*std::f32::consts::PI).sin()*2.0-1.0;
+        self.phase = (self.phase + self.frequency / SAMPLE_RATE as f32) % 1.0;
+        Some(result)
+    }
+}
+
+impl AdjustableSource for SemiSine {
+    fn set_frequency(&mut self, frequency: f32) {
+        self.frequency = frequency;
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+/// A stepping square source, with adjustable frequency. Goes up and back down in steps of 1 (-1, 0, 1, 0, etc)
+pub struct StepSquare {
+    phase: f32,
+    frequency: f32,
+}
+
+impl StepSquare {
+    /// Create a new stepping square wave source with the given frequency.
+    pub fn new(frequency: f32) -> StepSquare {
+        StepSquare {
+            phase: 0.0,
+            frequency,
+        }
+    }
+}
+
+impl Source for StepSquare {
+    fn current_frame_len(&self) -> Option<usize> {
+        None
+    }
+    fn channels(&self) -> u16 {
+        1
+    }
+    fn sample_rate(&self) -> u32 {
+        SAMPLE_RATE
+    }
+    fn total_duration(&self) -> Option<Duration> {
+        None
+    }
+}
+
+
+impl Iterator for StepSquare {
+    type Item = f32;
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = if self.phase <= 0.25 {
+            -1.0
+        } else if self.phase <= 0.5 {
+            0.0
+        } else if self.phase <= 0.75 {
+            1.0
+        } else {
+            0.0
+        };
+        self.phase = (self.phase + self.frequency / SAMPLE_RATE as f32) % 1.0;
+        Some(result)
+    }
+}
+
+impl AdjustableSource for StepSquare {
+    fn set_frequency(&mut self, frequency: f32) {
+        self.frequency = frequency;
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -290,6 +455,36 @@ mod tests {
         let (_stream, handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&handle).ok().unwrap();
         let source = TriangleWave::new(220.0);
+        sink.set_volume(0.2);
+        sink.append(source);
+        std::thread::sleep(Duration::from_secs(2));
+    }
+
+    #[test]
+    fn semitriangle_test() {
+        let (_stream, handle) = OutputStream::try_default().unwrap();
+        let sink = Sink::try_new(&handle).ok().unwrap();
+        let source = SemiTriangle::new(220.0);
+        sink.set_volume(0.2);
+        sink.append(source);
+        std::thread::sleep(Duration::from_secs(2));
+    }
+
+    #[test]
+    fn semisine_test() {
+        let (_stream, handle) = OutputStream::try_default().unwrap();
+        let sink = Sink::try_new(&handle).ok().unwrap();
+        let source = SemiSine::new(220.0);
+        sink.set_volume(0.2);
+        sink.append(source);
+        std::thread::sleep(Duration::from_secs(2));
+    }
+
+    #[test]
+    fn stepsquare_test() {
+        let (_stream, handle) = OutputStream::try_default().unwrap();
+        let sink = Sink::try_new(&handle).ok().unwrap();
+        let source = StepSquare::new(220.0);
         sink.set_volume(0.2);
         sink.append(source);
         std::thread::sleep(Duration::from_secs(2));
