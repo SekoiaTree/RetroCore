@@ -39,7 +39,8 @@ impl RetroCanvas {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
 
-        let window = video_subsystem.window(title, real_size.0, real_size.1)
+        let window = video_subsystem
+            .window(title, real_size.0, real_size.1)
             .position_centered()
             .build()
             .unwrap();
@@ -47,7 +48,9 @@ impl RetroCanvas {
             simulated_size,
             interior: window.into_canvas().build().unwrap(),
         };
-        canvas.set_logical_size(simulated_size.0, simulated_size.1).unwrap();
+        canvas
+            .set_logical_size(simulated_size.0, simulated_size.1)
+            .unwrap();
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.present();
@@ -57,7 +60,14 @@ impl RetroCanvas {
 
     /// Clears the simulated screen of your console with whatever color you set.
     pub fn clear_simulated(&mut self) {
-        self.interior.fill_rect(Rect::new(0, 0, self.simulated_size.0, self.simulated_size.1)).unwrap();
+        self.interior
+            .fill_rect(Rect::new(
+                0,
+                0,
+                self.simulated_size.0,
+                self.simulated_size.1,
+            ))
+            .unwrap();
     }
 }
 

@@ -46,11 +46,7 @@ impl Iterator for SquareWave {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let result = if self.phase < 0.5 {
-            1.0
-        } else {
-            -1.0
-        };
+        let result = if self.phase < 0.5 { 1.0 } else { -1.0 };
         self.phase = (self.phase + self.frequency / SAMPLE_RATE as f32) % 1.0;
         Some(result)
     }
@@ -279,7 +275,6 @@ impl Source for SemiTriangle {
     }
 }
 
-
 impl Iterator for SemiTriangle {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
@@ -302,7 +297,6 @@ impl AdjustableSource for SemiTriangle {
         self.frequency = frequency;
     }
 }
-
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 /// A semi-sine source, with adjustable frequency. Goes up from -1 to 1, then back down, but only with the positive half of a sine wave mapped to it.
@@ -335,7 +329,6 @@ impl Source for SemiSine {
         None
     }
 }
-
 
 impl Iterator for SemiSine {
     type Item = f32;
@@ -383,7 +376,6 @@ impl Source for StepSquare {
         None
     }
 }
-
 
 impl Iterator for StepSquare {
     type Item = f32;

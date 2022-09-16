@@ -1,8 +1,14 @@
-pub fn first_matches_condition<T>(required: T) -> impl Fn(&Vec<T>) -> bool where T: PartialEq {
+pub fn first_matches_condition<T>(required: T) -> impl Fn(&Vec<T>) -> bool
+where
+    T: PartialEq,
+{
     return move |input: &Vec<T>| input.first() == Some(&required);
 }
 
-pub fn matches_condition_at_index<T>(index: usize, required: T) -> impl Fn(&Vec<T>) -> bool where T: PartialEq {
+pub fn matches_condition_at_index<T>(index: usize, required: T) -> impl Fn(&Vec<T>) -> bool
+where
+    T: PartialEq,
+{
     return move |input: &Vec<T>| input.get(index) == Some(&required);
 }
 
