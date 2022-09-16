@@ -1,17 +1,18 @@
 extern crate core;
 
-pub mod audio;
-pub mod tokenizing;
-
 use std::ops::{Deref, DerefMut};
+
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
+pub mod audio;
+pub mod tokenizing;
+
 pub struct RetroCanvas {
-    simulated_size : (u32, u32),
-    interior: Canvas<Window>
+    simulated_size: (u32, u32),
+    interior: Canvas<Window>,
 }
 
 impl Deref for RetroCanvas {
@@ -34,7 +35,7 @@ impl RetroCanvas {
     /// The real size is the size of the window. If the ratios are different, parts of the real window will be whatever color you clear with, by default black.
     /// The title is the title of the window.
     /// If you wish to force integer scaling, call `set_integer_scaling(true)` after creating the canvas.
-    pub fn new(real_size : (u32, u32), simulated_size : (u32, u32), title : &str) -> RetroCanvas {
+    pub fn new(real_size: (u32, u32), simulated_size: (u32, u32), title: &str) -> RetroCanvas {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
 
@@ -44,7 +45,7 @@ impl RetroCanvas {
             .unwrap();
         let mut canvas = RetroCanvas {
             simulated_size,
-            interior: window.into_canvas().build().unwrap()
+            interior: window.into_canvas().build().unwrap(),
         };
         canvas.set_logical_size(simulated_size.0, simulated_size.1).unwrap();
         canvas.set_draw_color(Color::RGB(0, 0, 0));

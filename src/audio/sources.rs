@@ -1,8 +1,10 @@
 use std::time::Duration;
+
 use rand::distributions::Distribution;
 use rand::thread_rng;
 use rand_distr::Normal;
 use rodio::{Sample, Source};
+
 use crate::audio::{AdjustableSource, SAMPLE_RATE};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -97,7 +99,7 @@ impl Iterator for SawtoothWave {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let result = self.phase*2.0-1.0;
+        let result = self.phase * 2.0 - 1.0;
         self.phase = (self.phase + self.frequency / SAMPLE_RATE as f32) % 1.0;
         Some(result)
     }
@@ -145,9 +147,9 @@ impl Iterator for TriangleWave {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
         let result = if self.phase < 0.5 {
-            self.phase*4.0-1.0
+            self.phase * 4.0 - 1.0
         } else {
-            -(self.phase*4.0-3.0)
+            -(self.phase * 4.0 - 3.0)
         };
         self.phase = (self.phase + self.frequency / SAMPLE_RATE as f32) % 1.0;
         Some(result)
@@ -195,7 +197,7 @@ impl Source for SineWave {
 impl Iterator for SineWave {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
-        let result = (self.phase*2.0*std::f32::consts::PI).sin();
+        let result = (self.phase * 2.0 * std::f32::consts::PI).sin();
         self.phase = (self.phase + self.frequency / SAMPLE_RATE as f32) % 1.0;
         Some(result)
     }
@@ -282,13 +284,13 @@ impl Iterator for SemiTriangle {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
         let result = if self.phase <= 0.25 {
-            self.phase*8.0-1.0
+            self.phase * 8.0 - 1.0
         } else if self.phase <= 0.5 {
-            1.0-(self.phase-0.25)*4.0
+            1.0 - (self.phase - 0.25) * 4.0
         } else if self.phase <= 0.75 {
-            (self.phase-0.5)*4.0
+            (self.phase - 0.5) * 4.0
         } else {
-            1.0-((self.phase-0.75)*8.0)
+            1.0 - ((self.phase - 0.75) * 8.0)
         };
         self.phase = (self.phase + self.frequency / SAMPLE_RATE as f32) % 1.0;
         Some(result)
@@ -338,7 +340,7 @@ impl Source for SemiSine {
 impl Iterator for SemiSine {
     type Item = f32;
     fn next(&mut self) -> Option<Self::Item> {
-        let result = (self.phase*std::f32::consts::PI).sin()*2.0-1.0;
+        let result = (self.phase * std::f32::consts::PI).sin() * 2.0 - 1.0;
         self.phase = (self.phase + self.frequency / SAMPLE_RATE as f32) % 1.0;
         Some(result)
     }
@@ -409,6 +411,7 @@ impl AdjustableSource for StepSquare {
 #[cfg(test)]
 mod tests {
     use rodio::{OutputStream, Sink};
+
     use crate::audio::sources::*;
 
     #[test]

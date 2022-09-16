@@ -1,13 +1,14 @@
-pub mod sources;
-
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+
 use rodio::{OutputStream, OutputStreamHandle, Sample, Sink};
 use rodio::source::Source;
 
+pub mod sources;
+
 /// A source who's frequency can be adjusted.
-pub trait AdjustableSource : Source where
+pub trait AdjustableSource: Source where
     Self::Item: Sample, {
     fn set_frequency(&mut self, frequency: f32);
 }
@@ -16,27 +17,27 @@ const SAMPLE_RATE: u32 = 41000;
 
 /// A Source which contains other adjustable sources and plays all of them at once (with adjustable volumes and frequencies).
 pub struct Channels {
-    sources : Vec<Arc<Mutex<dyn AdjustableSource<Item = f32> + Send>>>,
-    volume : Vec<Arc<Mutex<f32>>>,
+    sources: Vec<Arc<Mutex<dyn AdjustableSource<Item=f32> + Send>>>,
+    volume: Vec<Arc<Mutex<f32>>>,
 }
 
 /// A builder for Channels
 pub struct ChannelsBuilder {
-    sources : Vec<Arc<Mutex<dyn AdjustableSource<Item = f32> + Send>>>,
+    sources: Vec<Arc<Mutex<dyn AdjustableSource<Item=f32> + Send>>>,
 }
 
 impl ChannelsBuilder {
     /// Create a new ChannelsBuilder
     pub fn new() -> Self {
         Self {
-            sources : Vec::new(),
+            sources: Vec::new(),
         }
     }
 
     /// Add a source.
     pub fn add_source<T>(mut self, source: T) -> Self
         where
-            T: AdjustableSource<Item = f32> + Send + 'static,
+            T: AdjustableSource<Item=f32> + Send + 'static,
     {
         self.sources.push(Arc::new(Mutex::new(source)) as _);
         self
@@ -46,7 +47,7 @@ impl ChannelsBuilder {
     /// This is useful if you wish to add more capabilities to your sources, such as a start signal.
     pub fn add_source_raw<T>(mut self, source: &mut Arc<Mutex<T>>) -> Self
         where
-            T: AdjustableSource<Item = f32> + Send + 'static,
+            T: AdjustableSource<Item=f32> + Send + 'static,
     {
         self.sources.push(source.clone());
         self
@@ -60,8 +61,8 @@ impl ChannelsBuilder {
 }
 
 impl Channels {
-    fn new(sources: Vec<Arc<Mutex<dyn AdjustableSource<Item = f32> + Send>>>) -> (Self, ChannelHook) {
-        let volumes : Vec<Arc<Mutex<f32>>> = (0..sources.len()).map(|_| Arc::new(Mutex::new(0.))).collect();
+    fn new(sources: Vec<Arc<Mutex<dyn AdjustableSource<Item=f32> + Send>>>) -> (Self, ChannelHook) {
+        let volumes: Vec<Arc<Mutex<f32>>> = (0..sources.len()).map(|_| Arc::new(Mutex::new(0.))).collect();
         for i in &sources {
             let j = i.lock().unwrap();
             if j.total_duration().is_some() || j.current_frame_len().is_some() {
@@ -72,11 +73,11 @@ impl Channels {
             }
         }
         (Channels {
-            sources : sources.clone(),
-            volume : volumes.clone(),
+            sources: sources.clone(),
+            volume: volumes.clone(),
         }, ChannelHook {
             sources,
-            volume: volumes
+            volume: volumes,
         })
     }
 }
@@ -113,18 +114,18 @@ impl Source for Channels {
 
 /// A hook which allows adjusting the volumes and frequencies of the channels after creation.
 pub struct ChannelHook {
-    volume : Vec<Arc<Mutex<f32>>>,
-    sources : Vec<Arc<Mutex<dyn AdjustableSource<Item = f32> + Send>>>,
+    volume: Vec<Arc<Mutex<f32>>>,
+    sources: Vec<Arc<Mutex<dyn AdjustableSource<Item=f32> + Send>>>,
 }
 
 impl ChannelHook {
     /// Set the frequency of the channel with the given index.
-    pub fn set_frequency(&mut self, index : usize, frequency: f32) {
+    pub fn set_frequency(&mut self, index: usize, frequency: f32) {
         self.sources[index].lock().unwrap().set_frequency(frequency);
     }
 
     /// Set the volume of the channel with the given index.
-    pub fn set_volume(&mut self, index : usize, volume: f32) {
+    pub fn set_volume(&mut self, index: usize, volume: f32) {
         *self.volume[index].lock().unwrap() = volume;
     }
 }
@@ -132,14 +133,14 @@ impl ChannelHook {
 /// A playback which controls the playing of a Channels. Derefs down to a Sink.
 /// DO NOT DROP THIS OR THE CHANNEL WILL STOP PLAYING.
 pub struct ChannelPlayback {
-    sink : Sink,
-    _stream : OutputStream,
-    _handle : OutputStreamHandle
+    sink: Sink,
+    _stream: OutputStream,
+    _handle: OutputStreamHandle,
 }
 
 impl ChannelPlayback {
     /// Create a new ChannelPlayback with the given Channels, and starts playing it.
-    pub fn new(channels : Channels) -> Self {
+    pub fn new(channels: Channels) -> Self {
         let (stream, handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&handle).ok().unwrap();
         sink.append(channels);
@@ -147,7 +148,7 @@ impl ChannelPlayback {
         ChannelPlayback {
             sink,
             _stream: stream,
-            _handle: handle
+            _handle: handle,
         }
     }
 }

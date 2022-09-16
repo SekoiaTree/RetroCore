@@ -1,31 +1,49 @@
 # RetroCore
+
 A library for easily creating windows and audio sources for fantasy consoles
 
 # API
+
 ## Canvas
+
 Create a new canvas with
+
 ```rs
 RetroCanvas::new((1000, 600), (320, 240), "Test");
 ```
-The parameters are, in order, the real window size, the simulated window size (i.e. the size of the console's window), and the title.
 
-A RetroCanvas derefs to a `Canvas<Window>` from SDL2, which means you can use all their methods (and should; that's how you draw to the window). Please refer to their documentation for more information. You must draw to the console window directly, with regular SDL2 code.
-The only exception is clearing the screen; clearing the screen also clears the backdrop of the window, which means if you clear with a color different from the background (black, by default), you will overwrite that. Instead, use `clear_simulated`
+The parameters are, in order, the real window size, the simulated window size (i.e. the size of the console's window),
+and the title.
+
+A RetroCanvas derefs to a `Canvas<Window>` from SDL2, which means you can use all their methods (and should; that's how
+you draw to the window). Please refer to their documentation for more information. You must draw to the console window
+directly, with regular SDL2 code.
+The only exception is clearing the screen; clearing the screen also clears the backdrop of the window, which means if
+you clear with a color different from the background (black, by default), you will overwrite that. Instead,
+use `clear_simulated`
 
 ## Audio
-Audio is created by creating a `Channels` struct, which contains a list of different channels. Each channel is an audio source of its own, with adjustable frequency. When you create a Channels struct (using the builder), you also receive the hook. The hook permits you to control the frequencies and volumes of all the different channels.
-Additionally, if you wish to add extra control to a source (e.g. a start signal for a drum beat), you can use `add_source_raw`. This allows you to keep a reference (specifically, an `Arc<Mutex<T>>`) which you can handle yourself.
+
+Audio is created by creating a `Channels` struct, which contains a list of different channels. Each channel is an audio
+source of its own, with adjustable frequency. When you create a Channels struct (using the builder), you also receive
+the hook. The hook permits you to control the frequencies and volumes of all the different channels.
+Additionally, if you wish to add extra control to a source (e.g. a start signal for a drum beat), you can
+use `add_source_raw`. This allows you to keep a reference (specifically, an `Arc<Mutex<T>>`) which you can handle
+yourself.
 
 The following adjustable sources are provided, but you can create more by implementing `AdjustableSource`:
+
 - Square wave
 - Sawtooth wave
 - Triangle wave
 - Sine wave
 - White noise
 
-The audio can then be more easily played than with rodio, using `ChannelPlayback::new(channels);`. If ChannelPlayback is dropped, the audio stops playing. ChannelPlayback also derefs to a Sink, for general control over the channels.
+The audio can then be more easily played than with rodio, using `ChannelPlayback::new(channels);`. If ChannelPlayback is
+dropped, the audio stops playing. ChannelPlayback also derefs to a Sink, for general control over the channels.
 
 Example code:
+
 ```rs
         
         let (channels, mut hook) = ChannelsBuilder::new()
